@@ -2607,13 +2607,16 @@ function spawn(){const busy=new Set(S.tiles.filter(t=>t.t<.3).map(t=>t.lane)),fr
  const bomb=!S.tiles.some(t=>t.col===7)&&!S.stack.includes(7)&&Math.random()<.08;
  S.tiles.push({lane:free[Math.random()*free.length|0],col:bomb?7:Math.random()*S.ncol|0,t:0,acc:0})}
 function burst(x,y,col,n){for(let i=0;i<n;i++)S.fx.push({x,y,vx:(Math.random()-.5)*120,vy:-Math.random()*120,life:.6,col:col===7?Math.random()*7|0:col})}
-function arrive(tl){if(S.state!=='play')return;
- if(tl.lane===S.lane&&S.stack.length<5){S.stack.push(tl.col);SFX.catch();burst(S.px+15,PY-S.stack.length*6,tl.col,4);if(S.wtype==='catch'){S.prog++;checkGoal()}}
- else if(tl.col===7){S.debris.push({x:15+tl.lane*30+1,y:RB-4,vy:-50,col:7});S.pops.push({x:15+tl.lane*30+15,y:RB-10,s:'LOST IT',c:'#fff',life:1})}
- else{S.drops++;S.debris.push({x:15+tl.lane*30+1,y:RB-4,vy:-50,col:tl.col});SFX.miss();S.shake=.25;S.flash=.25;S.pops.push({x:15+tl.lane*30+15,y:RB-10,s:'MISS',c:'#ff6060',life:1});
+function canCatch(tl){return S.stack.length<5&&(tl.lane===S.lane||(tl.lane===S.prevLane&&now-S.laneT<150))}
+function arrive(tl){if(S.state!=='play'){tl.dead=true;return}if(canCatch(tl)){tl.dead=true;catchT(tl)}else tl.hang=.15}
+function catchT(tl){S.stack.push(tl.col);SFX.catch();burst(S.px+15,PY-S.stack.length*6,tl.col,4);if(S.wtype==='catch'){S.prog++;checkGoal()}}
+function missT(tl){if(S.state!=='play')return;const full=tl.lane===S.lane&&S.stack.length>=5;
+ if(tl.col===7){S.debris.push({x:15+tl.lane*30+1,y:RB-4,vy:-50,col:7});S.pops.push({x:15+tl.lane*30+15,y:RB-10,s:'LOST IT',c:'#fff',life:1})}
+ else{S.drops++;S.debris.push({x:15+tl.lane*30+1,y:RB-4,vy:-50,col:tl.col});SFX.miss();S.shake=.25;S.flash=.25;S.pops.push({x:full?90:15+tl.lane*30+15,y:RB-10,s:full?'PADDLE FULL!':'MISS',c:'#ff6060',life:1.2});
   if(S.drops>=S.maxDrops)gameOver()}}
 function colH(c){return S.grid[c].length+S.fallers.filter(f=>f.c===c).length}
-function move(d){S.lane=Math.max(0,Math.min(4,S.lane+d))}
+function setLane(l){if(l!==S.lane){S.prevLane=S.lane;S.laneT=now;S.lane=l}}
+function move(d){setLane(Math.max(0,Math.min(4,S.lane+d)))}
 function drop(){if(S.state!=='play')return;if(!S.stack.length||(S.stack[S.stack.length-1]!==7&&colH(S.lane)>=5)){SFX.buzz();return}
  S.fallers.push({c:S.lane,col:S.stack.pop(),y:PY,vy:60});SFX.drop()}
 function toss(){if(S.state!=='play'||!S.stack.length)return;S.tiles.push({lane:S.lane,col:S.stack.pop(),t:.3,acc:0});SFX.toss()}
@@ -2659,7 +2662,8 @@ function update(dt){const ms=dt*1000;S.stateT+=dt;
  if(S.state!=='play')return;
  S.scroll=(S.scroll+dt*1000/(S.stepMs*STEPS))%1;
  S.spawnT-=ms;if(S.spawnT<=0){spawn();S.spawnT=S.spawnMs*(.75+Math.random()*.5)}
- for(const tl of S.tiles){tl.acc+=ms;while(tl.acc>=S.stepMs&&!tl.dead){tl.acc-=S.stepMs;tl.t+=1/STEPS;if(tl.t>=1-1e-6){tl.dead=true;arrive(tl)}}}
+ for(const tl of S.tiles){if(tl.dead)continue;if(tl.hang!=null){tl.hang-=dt;if(canCatch(tl)){tl.dead=true;catchT(tl)}else if(tl.hang<=0){tl.dead=true;missT(tl)}continue}
+  tl.acc+=ms;while(tl.acc>=S.stepMs&&!tl.dead&&tl.hang==null){tl.acc-=S.stepMs;tl.t+=1/STEPS;if(tl.t>=1-1e-6){tl.t=1;tl.acc=0;arrive(tl)}}}
  S.tiles=S.tiles.filter(t=>!t.dead);
  for(const f of S.fallers){f.vy+=900*dt;f.y+=f.vy*dt;const ty=rowY(S.grid[f.c].length);const ty2=rowY(Math.min(4,S.grid[f.c].length));if(f.y>=(f.col===7?ty2:ty)&&!f.dead){f.dead=true;if(f.col===7){zap(f.c);continue}if(S.grid[f.c].length<5)S.grid[f.c].push(f.col);burst(15+f.c*30+15,ty+CH-2,f.col,3)}}
  if(S.fallers.some(f=>f.dead)){S.fallers=S.fallers.filter(f=>!f.dead);resolve()}}
@@ -2681,6 +2685,7 @@ function drawPlay(){const T=TH[S.theme];
  for(const f of S.fallers)tile(15+f.c*30+1,f.y,28,CH-2,f.col);
  const px=Math.round(S.px);ctx.globalAlpha=.5;ctx.fillStyle='#fff';for(let y=PY+6;y<BY-1;y+=3)ctx.fillRect(px+14,y,2,1);ctx.globalAlpha=1;
  for(let i=0;i<S.stack.length;i++)tile(px+1,PY-(i+1)*6,28,6,S.stack[i]);
+ if(S.stack.length>=5&&S.state==='play'&&blink())txt('FULL',px+15,PY-40,'#ff6060');
  ctx.fillStyle='#c8c8d8';ctx.fillRect(px,PY,30,5);ctx.fillStyle='#fff';ctx.fillRect(px,PY,30,1);ctx.fillStyle='#5a5a74';ctx.fillRect(px,PY+4,30,1);ctx.fillStyle='#ffd23a';ctx.fillRect(px+13,PY+1,4,3);
  for(const d of S.debris)tile(d.x,d.y,28,6,d.col);
  for(const f of S.fx){ctx.fillStyle=PAL[f.col].hi;ctx.fillRect(f.x|0,f.y|0,2,2)}
@@ -2794,7 +2799,7 @@ cv.addEventListener('pointerup',e=>{if(!ps)return;const dx=e.clientX-ps.x,dy=e.c
  if(dy<-30&&Math.abs(dy)>Math.abs(dx)){act('T');return}
  if(Math.abs(dx)>25&&Math.abs(dx)>Math.abs(dy)){act(dx<0?'L':'R');return}
  const r=cv.getBoundingClientRect(),ix=(e.clientX-r.left)/r.width*W,l=Math.max(0,Math.min(4,Math.floor((ix-15)/30)));
- if(l===S.lane)act('D');else S.lane=l});
+ if(l===S.lane)act('D');else setLane(l)});
 addEventListener('keydown',e=>{const k={ArrowLeft:'L',ArrowRight:'R',ArrowDown:'D',' ':'D',ArrowUp:'T',Enter:'tap'}[e.key];
  if(S.state==='entry'&&/^[a-z]$/i.test(e.key)){S.ini[S.pos]=e.key.toUpperCase();act('D');return}if(S.state==='entry'&&e.key==='Backspace'){act('T');return}
  if(e.key==='p'||e.key==='P'){if(S.state==='pause')resume();else pause();return}if(k){e.preventDefault();unlock();act(k)}});
