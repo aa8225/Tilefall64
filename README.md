@@ -8,4 +8,4 @@ Catch tumbling tiles on your paddle, drop them into the bin, and line up three o
 
 Works in any modern phone or computer browser. Tap **SHARE** in the game for a QR code, a link to send, and one-tap install to the home screen. Installed copies update automatically and play offline.
 
-© 2026 AA Software Ltd. All rights reserved. QR code generator © Kazuhiko Arase (MIT licence). Press Start 2P font © CodeMan38 (SIL Open Font Licence 1.1, see FONT-LICENSE.txt).
+© 2026 AA Software Ltd. All rights reserved. QR code generator © Kazuhiko Arase (MIT licence). Press Start 2P font © 2012 The Press Start 2P Project Authors (SIL Open Font Licence 1.1, see FONT-LICENSE.txt).
