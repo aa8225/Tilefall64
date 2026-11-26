@@ -37,6 +37,8 @@ It runs in the web browser: no app store, no account, no ads.
   sw.js                 Offline play after the first visit
   icon-*.png            App icons
   logo.png              Tilefall 64 logo for your website or posts
+  share.png             Preview picture shown when the link is posted on LinkedIn etc.
+  FONT-LICENSE.txt      Licence for the Press Start 2P font (free to use)
 
 =====================================================
  HOW TO PLAY
