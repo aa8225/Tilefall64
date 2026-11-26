@@ -1,0 +1,277 @@
+/*
+ * TILEFALL 64 - styles
+ * (c) 2026 AA Software Ltd. All rights reserved.
+ *
+ * The game itself is drawn on a canvas by game.js. This file styles
+ * everything around it: the header, the monitor bezel, the on-screen
+ * buttons and the share panel. It uses a fixed dark retro look.
+ */
+
+/* Pixel font, bundled with the game (licence in fonts/FONT-LICENSE.txt). */
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/press-start-2p.woff2) format("woff2");
+}
+
+/* ---------- Page basics ---------- */
+:root {
+  color-scheme: dark;
+  --case: #241838;
+  --edge: #3a2a58;
+}
+* {
+  box-sizing: border-box;
+  min-width: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: radial-gradient(circle at 50% 30%, #22143a, #0c0616 70%);
+  color: #f2ecff;
+  font:
+    12px/1.4 "Press Start 2P",
+    monospace;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* Page layout: header at the top, game screen in the middle, control
+   buttons at the bottom. Safe-area padding keeps clear of phone notches. */
+#app {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+}
+
+/* ---------- Header: title and small buttons ---------- */
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+h1 {
+  font-size: 11px;
+  margin: 0;
+  color: #ffd23a;
+  text-shadow: 2px 2px 0 #c0306a;
+  white-space: nowrap;
+}
+.tb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- Buttons: chunky, raised, press down when tapped ---------- */
+button {
+  font: inherit;
+  color: #fff;
+  background: var(--case);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow:
+    inset 0 -4px 0 rgba(0, 0, 0, 0.35),
+    inset 0 2px 0 rgba(255, 255, 255, 0.18),
+    0 0 0 2px var(--edge);
+}
+button:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 -2px 0 rgba(0, 0, 0, 0.35),
+    0 0 0 2px var(--edge);
+}
+button:focus-visible {
+  outline: 3px solid #ffd23a;
+  outline-offset: 2px;
+}
+.tb button {
+  font-size: 8px;
+  min-height: 38px;
+  padding: 0 7px;
+}
+#bShare {
+  background: #1fa060;
+  color: #02140d;
+}
+
+/* ---------- Share panel (QR code, copy link, send, install) ---------- */
+#share {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(2, 20, 13, 0.93);
+}
+#share[hidden] {
+  display: none;
+}
+.card {
+  width: 100%;
+  max-width: 340px;
+  background: #0b2a1e;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 3px #5ee6a0,
+    0 16px 40px rgba(0, 0, 0, 0.6);
+  padding: 18px 16px;
+  text-align: center;
+  display: grid;
+  gap: 12px;
+}
+.card h2 {
+  margin: 0;
+  font-size: 11px;
+  color: #ffd23a;
+  line-height: 1.6;
+}
+#qr {
+  justify-self: center;
+  background: #fff;
+  padding: 6px;
+  border-radius: 4px;
+  line-height: 0;
+}
+#qr svg {
+  width: min(200px, 60vw);
+  height: auto;
+  display: block;
+  fill: initial;
+}
+.hint {
+  margin: 0;
+  font-size: 8px;
+  color: #9eefff;
+}
+#surl {
+  margin: 0;
+  font-size: 8px;
+  color: #c8ffe0;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.card button {
+  min-height: 48px;
+  font-size: 9px;
+}
+#bInstall {
+  background: #ffd23a;
+  color: #2a1a00;
+}
+#bInstall[hidden],
+#itext[hidden],
+#qr[hidden] {
+  display: none;
+}
+#itext {
+  color: #fff;
+  line-height: 1.8;
+}
+#bSend {
+  background: #1fa060;
+  color: #02140d;
+}
+#bCopy {
+  background: #2c5ad8;
+}
+#bSend[hidden] {
+  display: none;
+}
+.row:has(#bSend[hidden]) {
+  grid-template-columns: 1fr;
+}
+
+/* ---------- Game screen ---------- */
+#screen {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+/* The monitor bezel around the canvas. Its size is set by game.js. */
+#wrap {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 6px #2b1f44,
+    0 0 0 9px #0a0612,
+    0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Keep pixels sharp when the small canvas is scaled up. */
+#c {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  touch-action: none;
+}
+
+/* Faint CRT scanlines over the picture. */
+.scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px);
+}
+
+/* ---------- Control buttons under the screen ---------- */
+#pad {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.1fr 1.35fr;
+  gap: 8px;
+}
+#pad button {
+  height: 64px;
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+}
+#bL,
+#bR {
+  background: #2c5ad8;
+}
+#bToss {
+  background: #9a3ad8;
+}
+#bDrop {
+  background: #ffd23a;
+  color: #2a1a00;
+}
+
+/* Arrow icons inside the left/right buttons. */
+svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
