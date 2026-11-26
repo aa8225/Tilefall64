@@ -44,7 +44,9 @@ It runs in the web browser: no app store, no account, no ads.
   Tap a lane to move the paddle, tap the same lane again to drop a tile.
   Swipe up (or press TOSS) to throw a tile back up the ramp.
   Line up 3 or more of a colour across, down or diagonally.
-  Flashing rainbow tiles clear a whole column of the bin.
+  Flashing rainbow tiles are wild: drop one where it completes a line of 3
+  and it becomes that colour (counts as one completion). Anywhere else,
+  it clears the whole column.
   Waves change: match lines, make diagonals or across lines, lines of 4+,
   reach a score, catch tiles, survive the clock, clear a pre-filled bin,
   and bonus rounds where misses don't cost a life.

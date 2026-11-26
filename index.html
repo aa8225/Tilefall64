@@ -2682,7 +2682,7 @@ function findLines(){const at=(c,r)=>(c>=0&&c<5&&r>=0&&r<5)?S.grid[c][r]:undefin
    if(n>=3){lines.push({k,n,c,r});for(let i=0;i<n;i++)mark[c+dc*i][r+dr*i]=1}}}
  return{lines,mark}}
 function resolve(){let chain=0;for(;;){const {lines,mark}=findLines();if(!lines.length)break;chain++;
- let pts=0;for(const l of lines)pts+={h:250,v:100,d:500}[l.k]*(l.n-2)*chain;addPts(pts);if(S.wtype==='lines')S.prog+=lines.length;else if(S.wtype==='diag')S.prog+=lines.filter(l=>l.k==='d').length;else if(S.wtype==='rows')S.prog+=lines.filter(l=>l.k==='h').length;else if(S.wtype==='big')S.prog+=lines.filter(l=>l.n>=4).length;
+ let pts=0;for(const l of lines)pts+={h:250,v:100,d:500}[l.k]*(l.n-2)*chain;addPts(pts);if(S.wildRes&&chain===1&&['lines','rows','diag','big'].includes(S.wtype))S.prog+=1;else if(S.wtype==='lines')S.prog+=lines.length;else if(S.wtype==='diag')S.prog+=lines.filter(l=>l.k==='d').length;else if(S.wtype==='rows')S.prog+=lines.filter(l=>l.k==='h').length;else if(S.wtype==='big')S.prog+=lines.filter(l=>l.n>=4).length;
  else if(S.wtype==='clearbin')for(const m of mark)S.prog+=m.filter(Boolean).length;
  for(let c=0;c<5;c++)for(let r=0;r<5;r++)if(mark[c][r])burst(15+c*30+15,rowY(r)+10,S.grid[c][r],6);
  const l0=lines[0];S.pops.push({x:15+l0.c*30+15,y:rowY(l0.r),s:'+'+pts,c:'#ffd23a',life:1.2});
@@ -2690,6 +2690,9 @@ function resolve(){let chain=0;for(;;){const {lines,mark}=findLines();if(!lines.
  if(chain>1)S.pops.push({x:90,y:BY-24,s:'CHAIN x'+chain,c:'#3ad35a',life:1.2});
  for(let c=0;c<5;c++)S.grid[c]=S.grid[c].filter((v,r)=>!mark[c][r]);SFX.match(chain)}
  checkGoal()}
+function wild(c){const r=S.grid[c].length;if(r>=5)return false;let best=-1,bn=0;
+ for(let k=0;k<7;k++){S.grid[c].push(k);const {mark}=findLines();S.grid[c].pop();if(mark[c][r]){const n=mark.reduce((a,m)=>a+m.filter(Boolean).length,0);if(n>bn){bn=n;best=k}}}
+ if(best<0)return false;S.grid[c].push(best);S.wflash=.3;S.pops.push({x:90,y:BY-34,s:'WILD!',c:'#fff',life:1.3});S.wildRes=true;resolve();S.wildRes=false;return true}
 function zap(c){const n=S.grid[c].length,pts=n?n*200:100;for(let r=0;r<n;r++)burst(15+c*30+15,rowY(r)+10,S.grid[c][r],8);
  S.grid[c]=[];addPts(pts);if(S.wtype==='clearbin')S.prog+=n;S.wflash=.35;S.shake=.15;S.pops.push({x:90,y:BY-14,s:n?'COLUMN CLEAR!':'ZAP!',c:'#fff',life:1.3});S.pops.push({x:15+c*30+15,y:BY+40,s:'+'+pts,c:'#ffd23a',life:1.2});SFX.zap();checkGoal()}
 function levelClear(){S.state='clear';S.stateT=0;S.bonus=(S.maxDrops-S.drops)*1000+S.level*500;S.score+=S.bonus;SFX.clear()}
@@ -2721,7 +2724,7 @@ function update(dt){const ms=dt*1000;S.stateT+=dt;
  for(const tl of S.tiles){if(tl.dead)continue;if(tl.hang!=null){tl.hang-=dt;if(canCatch(tl)){tl.dead=true;catchT(tl)}else if(tl.hang<=0){tl.dead=true;missT(tl)}continue}
   tl.acc+=ms;while(tl.acc>=S.stepMs&&!tl.dead&&tl.hang==null){tl.acc-=S.stepMs;tl.t+=1/STEPS;if(tl.t>=1-1e-6){tl.t=1;tl.acc=0;arrive(tl)}}}
  S.tiles=S.tiles.filter(t=>!t.dead);
- for(const f of S.fallers){f.vy+=900*dt;f.y+=f.vy*dt;const ty=rowY(S.grid[f.c].length);const ty2=rowY(Math.min(4,S.grid[f.c].length));if(f.y>=(f.col===7?ty2:ty)&&!f.dead){f.dead=true;if(f.col===7){zap(f.c);continue}if(S.grid[f.c].length<5)S.grid[f.c].push(f.col);burst(15+f.c*30+15,ty+CH-2,f.col,3)}}
+ for(const f of S.fallers){f.vy+=900*dt;f.y+=f.vy*dt;const ty=rowY(S.grid[f.c].length);const ty2=rowY(Math.min(4,S.grid[f.c].length));if(f.y>=(f.col===7?ty2:ty)&&!f.dead){f.dead=true;if(f.col===7){if(!wild(f.c))zap(f.c);continue}if(S.grid[f.c].length<5)S.grid[f.c].push(f.col);burst(15+f.c*30+15,ty+CH-2,f.col,3)}}
  if(S.fallers.some(f=>f.dead)){S.fallers=S.fallers.filter(f=>!f.dead);resolve()}}
 
 /* ---------- rendering ---------- */
@@ -2795,7 +2798,7 @@ function drawTitle(){ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,W,H);
  for(let i=0;i<5;i++){const p=(now/420+i*.25)%1,c=Math.cos(p*Math.PI),h=Math.max(1,8*Math.abs(c));tile(28+i*26,106-h/2,22,h,i,c<0)}
  const ph=S.stateT%15;if(table.length&&ph>=9){txt('HIGH SCORES',90,120,'#ffd23a');table.slice(0,8).forEach((e,i)=>txt(String(i+1).padStart(2,' ')+' '+e.n+' '+pad6(e.s),90,136+i*12,i===S.rank&&blink()?'#ffd23a':i===0?'#fff':'#c8c0e0'))}
  else{['CATCH THE TILES,','DROP THEM IN THE BIN.','LINE UP 3 COLOURS','ACROSS, DOWN OR','DIAGONAL TO SCORE.'].forEach((s,i)=>txt(s,90,120+i*11,'#fff'));
- txt('FLASHING TILES',90,178,(now/150|0)%2?'#ffd23a':'#fff');txt('CLEAR A COLUMN!',90,189,'#ffd23a');
+ txt('FLASHING TILE: WILD!',90,178,(now/150|0)%2?'#ffd23a':'#fff');txt('OR CLEARS A COLUMN',90,189,'#ffd23a');
  ['TAP LANE: MOVE','TAP AGAIN: DROP','SWIPE UP: TOSS'].forEach((s,i)=>txt(s,90,204+i*11,'#9eefff'))}
  if(blink())txt(S.armed?'TAP TO PLAY':'TAP TO START',90,250,'#ffd23a');txt('HI '+pad6(hi),90,270,'#b8b0d0');txt('(C) 2026 AA SOFTWARE',90,300,'#5ee6a0')}
 function render(dt){ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);if(S.state==='boot'){drawBoot();return}ctx.save();
