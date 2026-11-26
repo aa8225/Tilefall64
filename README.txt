@@ -45,6 +45,9 @@ It runs in the web browser: no app store, no account, no ads.
   Swipe up (or press TOSS) to throw a tile back up the ramp.
   Line up 3 or more of a colour across, down or diagonally.
   Flashing rainbow tiles clear a whole column of the bin.
-  Waves change: match lines, make diagonals, reach a score, or catch tiles.
+  Waves change: match lines, make diagonals or across lines, lines of 4+,
+  reach a score, catch tiles, survive the clock, clear a pre-filled bin,
+  and bonus rounds where misses don't cost a life.
+  18 scenes, each with its own thought, some change as you play.
   Top 10 scores are saved on each device with your initials.
   Keyboard: arrows move, Space/Down drops, Up tosses, P pauses.
