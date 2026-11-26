@@ -1,0 +1,16 @@
+{
+  "name": "Tilefall 64 – AA Software Ltd",
+  "short_name": "Tilefall 64",
+  "description": "An 8-bit tile-catching arcade game by AA Software Ltd.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#02140d",
+  "theme_color": "#02140d",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
