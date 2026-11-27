@@ -1720,7 +1720,7 @@
     S.goal = {
       lines: Math.min(12, 2 + L),
       diag: Math.min(4, 1 + Math.floor(L / 6)),
-      score: 2000 + L * 1500,
+      score: 1000 + L * 400,
       catch: 12 + L * 2,
       rows: Math.min(8, 1 + Math.floor(L / 2)),
       big: Math.min(3, 1 + Math.floor(L / 10)),
@@ -1731,6 +1731,8 @@
     S.prog = 0;
     S.timer = S.goal;
     if (S.wtype === "bonus") S.ncol = 3;
+    // Score waves pick a gold colour: lines of that colour score triple.
+    S.gold = S.wtype === "score" ? (Math.random() * S.ncol) | 0 : -1;
     S.maxDrops = 3 + Math.floor((L - 1) / 3);
     S.grid = [[], [], [], [], []];
     S.stack = [];
@@ -2004,7 +2006,12 @@
       if (!lines.length) break;
       chain++;
       let pts = 0;
-      for (const l of lines) pts += { h: 250, v: 100, d: 500 }[l.k] * (l.n - 2) * chain;
+      // Base points: down 100, across 250, diagonal 500, more for longer
+      // lines and chain reactions. Gold-colour lines score triple.
+      for (const l of lines)
+        pts += { h: 250, v: 100, d: 500 }[l.k] * (l.n - 2) * chain * (S.grid[l.c][l.r] === S.gold ? 3 : 1);
+      if (lines.some((l) => S.grid[l.c][l.r] === S.gold))
+        S.pops.push({ x: 90, y: BY - 44, s: "GOLD x3!", c: "#ffd23a", life: 1.2 });
       addPts(pts);
       if (S.wildRes && chain === 1 && ["lines", "rows", "diag", "big"].includes(S.wtype)) S.prog += 1;
       else if (S.wtype === "lines") S.prog += lines.length;
@@ -2052,6 +2059,11 @@
     S.wildRes = true;
     resolve();
     S.wildRes = false;
+    // Completing a line with a wild tile earns a 1,000 point bonus.
+    addPts(1000);
+    S.pops.push({ x: 90, y: BY - 54, s: "WILD BONUS +1000", c: "#fff", life: 1.4 });
+    SFX.clear();
+    checkGoal();
     return true;
   }
 
@@ -2366,6 +2378,8 @@
       ctx.fillRect(176 - (S.maxDrops - i) * 7, 4, 5, 7);
     }
     txt(progText(), 4, 17, "#9eefff", "left");
+    // On score waves, show the gold colour next to the target.
+    if (S.gold >= 0 && S.state !== "title") tile(84, 17, 12, 8, S.gold);
     txt("HI " + pad6(Math.max(hi, S.score)), 176, 17, "#b8b0d0", "right");
   }
 
@@ -2669,6 +2683,10 @@
         txt(S.wtype === "bonus" ? "BONUS!" : "WAVE " + S.level, 90, 80, "#ffd23a", "center", 16);
         txt(T.name, 90, 102, T.acc);
         txt(goalText(), 90, 118, "#fff");
+        if (S.gold >= 0) {
+          tile(50, 130, 14, 9, S.gold);
+          txt("SCORES X3", 70, 131, "#ffd23a", "left");
+        }
         if (S.stateT > 0.6) {
           ctx.globalAlpha = Math.min(1, (S.stateT - 0.6) * 2);
           txt(T.th[0], 90, 144, "#c8c0e0");
